@@ -1,0 +1,43 @@
+CalcScript — Gramática del lenguaje (EBNF)
+==========================================
+
+GRAMÁTICA LÉXICA (implementada en src/rules.py):
+
+  identifier    = ( letra | "_" ) { letra | dígito | "_" }
+  keyword       = "if" | "else" | "while" | "func" | "return" | "print"
+  number_int    = dígito { dígito }
+  number_float  = dígito { dígito } "." dígito { dígito }
+  string        = '"' { cualquier_char_excepto_comilla } '"'
+  operator      = "+" | "-" | "*" | "/" | "=" | ">" | "<" | ">=" | "<=" | "==" | "!="
+  delimiter     = ";" | "," | "(" | ")" | "{" | "}"
+  comment       = "#" { cualquier_char } newline
+  whitespace    = " " | "\t" | "\r"
+
+  Orden de evaluación: whitespace → comment → number_float → number_int
+    → string → identifier → operator(2ch) → operator(1ch) → delimiter → error
+
+GRAMÁTICA SINTÁCTICA (implementada en src/parser.py):
+
+  program     = { statement }
+  statement   = funcDecl | ifStmt | whileStmt | returnStmt
+              | printStmt | block | assignment | exprStmt
+  funcDecl    = "func" IDENT "(" [paramList] ")" block
+  ifStmt      = "if" expression block [ "else" block ]
+  whileStmt   = "while" expression block
+  returnStmt  = "return" [ expression ] ";"
+  printStmt   = "print" "(" expression ")" ";"
+  assignment  = IDENT "=" expression ";"
+  exprStmt    = expression ";"
+  block       = "{" { statement } "}"
+
+  expression  = equality
+  equality    = comparison { ("==" | "!=") comparison }
+  comparison  = term { (">" | "<" | ">=" | "<=") term }
+  term        = factor { ("+" | "-") factor }
+  factor      = unary { ("*" | "/") unary }
+  unary       = "-" unary | call
+  call        = primary [ "(" [argList] ")" ]
+  primary     = NUMBER_INT | NUMBER_FLOAT | STRING | IDENT | "(" expression ")"
+
+  Precedencia (menor a mayor): == != < > <= >= < + - < * / < unario < llamada
+  Recuperación de errores: sincronización a ";" o keyword de inicio de sentencia
